@@ -19,24 +19,24 @@ K = {
         'FA':   {'Cap': 500, 'Ini': 500, 'Price':  0},
         'FB':   {'Cap': 500, 'Ini': 500, 'Price':  0},
         'FC':   {'Cap': 500, 'Ini': 500, 'Price':  0},
-        'HotA': {'Cap': 100, 'Ini':   0, 'Price': -100},
-        'AB':   {'Cap': 200, 'Ini':   0, 'Price': -100},
-        'BC':   {'Cap': 150, 'Ini':   0, 'Price': -100},
-        'E':    {'Cap': 100, 'Ini':   0, 'Price': -100},
+        'HotA': {'Cap': 100, 'Ini':   0, 'Price': -1},
+        'AB':   {'Cap': 200, 'Ini':   0, 'Price': -1},
+        'BC':   {'Cap': 150, 'Ini':   0, 'Price': -1},
+        'E':    {'Cap': 100, 'Ini':   0, 'Price': -1},
         'P1':   {'Cap': 500, 'Ini':   0, 'Price': 10},
         'P2':   {'Cap': 500, 'Ini':   0, 'Price': 10},
     }
 
 #State-to-Task nodes with feed amount/stoichiometry (as KtI for material to task)
 KtI = {
-        ('FA',   'Heating'):    {'Feed': 1.0},
-        ('FB',   'R1'):         {'Feed': 0.5},
-        ('FC',   'R1'):         {'Feed': 0.5},
-        ('FC',   'R3'):         {'Feed': 0.2},
-        ('HotA', 'R2'):         {'Feed': 0.4},
-        ('AB',   'R3'):         {'Feed': 0.8},
-        ('BC',   'R2'):         {'Feed': 0.6},
-        ('E',    'Separation'): {'Feed': 1.0},
+        ('FA',   'Heating'):    {'xi': 1.0},
+        ('FB',   'R1'):         {'xi': 0.5},
+        ('FC',   'R1'):         {'xi': 0.5},
+        ('FC',   'R3'):         {'xi': 0.2},
+        ('HotA', 'R2'):         {'xi': 0.4},
+        ('AB',   'R3'):         {'xi': 0.8},
+        ('BC',   'R2'):         {'xi': 0.6},
+        ('E',    'Separation'): {'xi': 1.0},
     }
 
 #Task-to-State nodes with task processing time and conversion coefficient
@@ -53,14 +53,14 @@ ItK = {
 #Units able to perform specific tasks node (as JI_union) with capacity
 #and gamma of performing task
 JI_union = {
-        ('Heater', 'Heating'):    {'Betamin': 0, 'Betamax': 100, 'gamma': 1},
-        ('Reactor1', 'R1'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 1},
-        ('Reactor1', 'R2'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 1},
-        ('Reactor1', 'R3'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 1},
-        ('Reactor2', 'R1'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 1},
-        ('Reactor2', 'R2'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 1},
-        ('Reactor2', 'R3'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 1},
-        ('Still', 'Separation'):  {'Betamin': 0, 'Betamax': 200, 'gamma': 1},
+        ('Heater', 'Heating'):    {'Betamin': 0, 'Betamax': 100, 'gamma': 0.01},
+        ('Reactor 1', 'R1'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 0.01},
+        ('Reactor 1', 'R2'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 0.01},
+        ('Reactor 1', 'R3'):       {'Betamin': 0, 'Betamax':  80, 'gamma': 0.01},
+        ('Reactor 2', 'R1'):       {'Betamin': 0, 'Betamax':  50, 'gamma': 0.01},
+        ('Reactor 2', 'R2'):       {'Betamin': 0, 'Betamax':  50, 'gamma': 0.01},
+        ('Reactor 2', 'R3'):       {'Betamin': 0, 'Betamax':  50, 'gamma': 0.01},
+        ('Still', 'Separation'):  {'Betamin': 0, 'Betamax': 200, 'gamma': 0.01},
     }
 ###############################################################################
 
@@ -79,8 +79,8 @@ Kminus = {i: set() for i in I}
 for (k,i) in KtI:
     Kminus[i].add(k)
 
-#Input fraction (feed) of task i from material k
-Feed = {(i,k): KtI[(k,i)]['Feed'] for (k,i) in KtI}
+#Input fraction (xi) of task i from material k
+xi = {(i,k): KtI[(k,i)]['xi'] for (k,i) in KtI}
 
 #Output fraction (conversion coefficient) of task i to material k
 rho = {(i,k): ItK[(i,k)]['rho'] for (i,k) in ItK}
@@ -168,22 +168,10 @@ model.obj = pyo.Objective(expr = model.SVal - model.OpCost, sense = pyo.maximize
 #Create constraint environment
 model.con = pyo.ConstraintList()
 
-#Equation 3: Inventory development over time (material mass balance)
-for k in K.keys():
-    eq = K[k]['Ini']
-    for t in T:
-        #Production
-        for i in Iplus[k]:
-            for j in Ji[i]:
-                if t >= tauK[(i,k)]:
-                    eq = eq + rho[(i,k)]*model.B[i,j,max(T[T <= t-tauK[(i,k)]])]
-        #Consumption
-        for i in Iminus[k]:
-            eq = eq - rho[(i,k)]*sum([model.B[i,j,t] for j in Ji[i]])
-        model.con.add(model.S[k,t] == eq)
-        eq = model.S[k,t] 
+#Lifted variable handling: M is inventory of unit j at time t
+model.M = pyo.Var(J, T, domain=pyo.NonNegativeReals)
 
-#Constraint 1: A unit can only take one task at a time
+#Constraint 1: Only one task per unit at time t
 for j in J:
     for t in T:
         eq = 0
@@ -191,17 +179,45 @@ for j in J:
             for n in T:
                 if n >= (t-tau[i]+1) and n <= t:
                     eq = eq + model.W[i,j,n]
-        model.con.add(eq <= 1)            
-
-#Constraint 2: Unit capacity constraint
+        model.con.add(eq <= 1)
+        
+#Constraint 2: Unit minimum and maximum capacity
 for t in T:
     for j in J:
         for i in Ij[j]:
             model.con.add(model.W[i,j,t]*Betamin[i,j] <= model.B[i,j,t])
             model.con.add(model.B[i,j,t] <= model.W[i,j,t]*Betamax[i,j]) 
-
-#Constraint 3: Material/inventory capacity constraint
+    
+#Constraint 3: Storage capacity/maximum inventory
 model.Scon = pyo.Constraint(K.keys(), T, rule = lambda model, k, t: model.S[k,t] <= Sk_max[k])
+
+#Equation 1: Development of inventory over time (Mass balances)
+for k in K.keys():
+    eq = K[k]['Ini']
+    for t in T:
+        for i in Iplus[k]:
+            for j in Ji[i]:
+                if t >= tauK[(i,k)]: 
+                    eq = eq + rho[(i,k)]*model.B[i,j,max(T[T <= t-tauK[(i,k)]])]             
+        for i in Iminus[k]:
+            eq = eq - xi[(i,k)]*sum([model.B[i,j,t] for j in Ji[i]])
+        model.con.add(model.S[k,t] == eq)
+        eq = model.S[k,t] 
+
+#Equation 2 and 3: Development of W and B over time (using M)
+for j in J:
+    eq = 0
+    for t in T:
+        eq = eq + sum([model.B[i,j,t] for i in Ij[j]])
+        for i in Ij[j]:
+            for k in Kplus[i]:
+                if t >= tauK[(i,k)]:
+                    eq = eq - rho[(i,k)]*model.B[i,j,max(T[T <= t-tauK[(i,k)]])]
+        model.con.add(model.M[j,t] == eq)
+        eq = model.M[j,t]
+
+#Additional constraint: No active units at the end of the scheduling horizon
+model.tc = pyo.Constraint(J, rule = lambda model, j: model.M[j,H] == 0)
 
 ###############################################################################
 
@@ -211,24 +227,23 @@ model.Scon = pyo.Constraint(K.keys(), T, rule = lambda model, k, t: model.S[k,t]
 SolverFactory('cplex').solve(model).write()
 
 #Visualise solution in Gantt chart
-plt.figure(figsize=(12,6))
+plt.figure(figsize=(10,3))
 
-gap = H/500
-idx = 1
-lbls = []
+gap = 1/500*H
 ticks = []
+lbls = []
+idp = 1
 for j in sorted(J):
-    idx = idx - 1
+    idp = idp - 1
     for i in sorted(Ij[j]):
-        idx = idx - 1
-        ticks.append(idx)
-        lbls.append("{0:s} -> {1:s}".format(j,i))
-        plt.plot([0,H],[idx,idx],lw=20,alpha=.3,color='y')
+        idp = idp - 1
+        ticks.append(idp)
+        lbls.append("{0:s} ({1:s})".format(j,i))
         for t in T:
             if model.W[i,j,t]() > 0:
-                plt.plot([t+gap,t+tau[i]-gap], [idx,idx],'b', lw=20, solid_capstyle='butt')
+                plt.plot([t+gap,t+tau[i]-gap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
                 txt = "{0:.2f}".format(model.B[i,j,t]())
-                plt.text(t+tau[i]/2, idx, txt, color='white', weight='bold', ha='center', va='center')
+                plt.text(t+tau[i]/2, idp, txt, color='k', weight='bold', ha='center', va='center')
 plt.xlim(0,H)
 plt.gca().set_yticks(ticks)
 plt.gca().set_yticklabels(lbls);
