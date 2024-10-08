@@ -19,10 +19,10 @@ K = {
         'FA':   {'Cap': 500, 'Ini': 500, 'Price':  0},
         'FB':   {'Cap': 500, 'Ini': 500, 'Price':  0},
         'FC':   {'Cap': 500, 'Ini': 500, 'Price':  0},
-        'HotA': {'Cap': 100, 'Ini':   0, 'Price': -1},
-        'AB':   {'Cap': 200, 'Ini':   0, 'Price': -1},
-        'BC':   {'Cap': 150, 'Ini':   0, 'Price': -1},
-        'E':    {'Cap': 100, 'Ini':   0, 'Price': -1},
+        'HotA': {'Cap': 100, 'Ini':   0, 'Price': -100},
+        'AB':   {'Cap': 200, 'Ini':   0, 'Price': -100},
+        'BC':   {'Cap': 150, 'Ini':   0, 'Price': -100},
+        'E':    {'Cap': 100, 'Ini':   0, 'Price': -100},
         'P1':   {'Cap': 500, 'Ini':   0, 'Price': 10},
         'P2':   {'Cap': 500, 'Ini':   0, 'Price': 10},
     }
@@ -100,12 +100,12 @@ for (j,i) in JI_union:
 
 #Tasks producing material k
 Iplus = {k: set() for k in K}
-for (k,i) in KtI:
+for (i,k) in ItK:
     Iplus[k].add(i)
 
 #Tasks consuming material k
 Iminus = {k: set() for k in K}
-for (i,k) in ItK:
+for (k,i) in KtI:
     Iminus[k].add(i)
 
 #Storage capacity/maximum inventory of material k
@@ -129,14 +129,15 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 
 ###############################################################################
 
-##OPTIMISATION MODELLING
+##MODELLING: VARIABLES AND OBJECTIVE
 
 #Create model environment
 model = pyo.ConcreteModel()
 
-#Planning horizon (H) and time (T)
+#Planning horizon (H), time interval (tgap) and time (T)
 H = 10
-T = np.array(range(0,H+1))
+tgap = 1
+T = tgap*np.array(range(0,int(1/tgap)*H+1))
 
 #Decision variable Wijt
 model.W = pyo.Var(I,J,T,domain=pyo.Boolean)
@@ -149,14 +150,85 @@ model.S = pyo.Var(K.keys(),T, domain=pyo.NonNegativeReals)
 
 #Value of inventory
 model.SVal = pyo.Var(domain=pyo.NonNegativeReals)
-model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['price']*model.S[k,H] for k in K]))
+model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['Price']*model.S[k,H] for k in K]))
 
 #Cost of operation
 model.OpCost = pyo.Var(domain=pyo.NonNegativeReals)
-model.OpCostcon = pyo.Constraint(expr = model.Cost == 
+model.OpCostcon = pyo.Constraint(expr = model.OpCost == 
                                  sum([JI_union[(j,i)]['gamma']*model.W[i,j,t] 
-                                      for i in I for j in Ji for t in T]))
+                                      for i in I for j in Ji[i] for t in T])) 
 
 #Objective function defined as maximisation of inventory value minus cost of operation
 model.obj = pyo.Objective(expr = model.SVal - model.OpCost, sense = pyo.maximize)
 
+###############################################################################
+
+##MODELLING: EQUATIONS AND CONSTRAINTS
+
+#Create constraint environment
+model.con = pyo.ConstraintList()
+
+#Equation 3: Inventory development over time (material mass balance)
+for k in K.keys():
+    eq = K[k]['Ini']
+    for t in T:
+        #Production
+        for i in Iplus[k]:
+            for j in Ji[i]:
+                if t >= tauK[(i,k)]:
+                    eq = eq + rho[(i,k)]*model.B[i,j,max(T[T <= t-tauK[(i,k)]])]
+        #Consumption
+        for i in Iminus[k]:
+            eq = eq - rho[(i,k)]*sum([model.B[i,j,t] for j in Ji[i]])
+        model.con.add(model.S[k,t] == eq)
+        eq = model.S[k,t] 
+
+#Constraint 1: A unit can only take one task at a time
+for j in J:
+    for t in T:
+        eq = 0
+        for i in Ij[j]:
+            for n in T:
+                if n >= (t-tau[i]+1) and n <= t:
+                    eq = eq + model.W[i,j,n]
+        model.con.add(eq <= 1)            
+
+#Constraint 2: Unit capacity constraint
+for t in T:
+    for j in J:
+        for i in Ij[j]:
+            model.con.add(model.W[i,j,t]*Betamin[i,j] <= model.B[i,j,t])
+            model.con.add(model.B[i,j,t] <= model.W[i,j,t]*Betamax[i,j]) 
+
+#Constraint 3: Material/inventory capacity constraint
+model.Scon = pyo.Constraint(K.keys(), T, rule = lambda model, k, t: model.S[k,t] <= Sk_max[k])
+
+###############################################################################
+
+##SOLVE MODEL AND VISUALISE
+
+#Solve the model with PYOMO optimisation
+SolverFactory('cplex').solve(model).write()
+
+#Visualise solution in Gantt chart
+plt.figure(figsize=(12,6))
+
+gap = H/500
+idx = 1
+lbls = []
+ticks = []
+for j in sorted(J):
+    idx = idx - 1
+    for i in sorted(Ij[j]):
+        idx = idx - 1
+        ticks.append(idx)
+        lbls.append("{0:s} -> {1:s}".format(j,i))
+        plt.plot([0,H],[idx,idx],lw=20,alpha=.3,color='y')
+        for t in T:
+            if model.W[i,j,t]() > 0:
+                plt.plot([t+gap,t+tau[i]-gap], [idx,idx],'b', lw=20, solid_capstyle='butt')
+                txt = "{0:.2f}".format(model.B[i,j,t]())
+                plt.text(t+tau[i]/2, idx, txt, color='white', weight='bold', ha='center', va='center')
+plt.xlim(0,H)
+plt.gca().set_yticks(ticks)
+plt.gca().set_yticklabels(lbls);
