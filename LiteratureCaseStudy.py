@@ -294,13 +294,13 @@ for j in sorted(J):
     elif j == 'Still':
         iart = 4
     idp = idp - 1
-    for i in Ij[j]:
+    for i in sorted(Ij[j]):
         idp = idp - 1
         marks.append(idp)
         lbls.append("{0:s} ({1:s})".format(j,i))
         for t in T:
             if Wart[iart,jart,t] > 0:
-                plt.plot([t+bargap,t+tau[i]-bargap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
+                plt.plot([t+bargap,t+tau[i]-bargap], [idp,idp],alpha=.5,color='m', lw=15, solid_capstyle='butt')
                 txt = "{0:.2f}".format(Bart[iart,jart,t])
                 plt.text(t+tau[i]/2, idp, txt, color='k', weight='bold', ha='center', va='center')
         iart = iart + 1
