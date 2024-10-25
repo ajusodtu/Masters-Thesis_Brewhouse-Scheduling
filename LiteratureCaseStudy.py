@@ -10,21 +10,20 @@ from pyomo.opt import SolverFactory
 #Import packages for data and visualisation
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 ###############################################################################
 ##DICTIONARIES are created to carry data in a transparent and general manner
 #States (as K for material)
 K = {
-        'FA':   {'Cap': 500, 'Ini': 500, 'Price':  0},
-        'FB':   {'Cap': 500, 'Ini': 500, 'Price':  0},
-        'FC':   {'Cap': 500, 'Ini': 500, 'Price':  0},
-        'HotA': {'Cap': 100, 'Ini':   0, 'Price': -1},
-        'AB':   {'Cap': 200, 'Ini':   0, 'Price': -1},
-        'BC':   {'Cap': 150, 'Ini':   0, 'Price': -1},
-        'E':    {'Cap': 100, 'Ini':   0, 'Price': -1},
-        'P1':   {'Cap': 500, 'Ini':   0, 'Price': 10},
-        'P2':   {'Cap': 500, 'Ini':   0, 'Price': 10},
+        'FA':   {'Cap': 500, 'Ini': 500, 'nu':  0},
+        'FB':   {'Cap': 500, 'Ini': 500, 'nu':  0},
+        'FC':   {'Cap': 500, 'Ini': 500, 'nu':  0},
+        'HotA': {'Cap': 100, 'Ini':   0, 'nu': -1},
+        'AB':   {'Cap': 200, 'Ini':   0, 'nu': -1},
+        'BC':   {'Cap': 150, 'Ini':   0, 'nu': -1},
+        'E':    {'Cap': 100, 'Ini':   0, 'nu': -1},
+        'P1':   {'Cap': 500, 'Ini':   0, 'nu': 10},
+        'P2':   {'Cap': 500, 'Ini':   0, 'nu': 10},
     }
 
 #State-to-Task nodes with feed amount/stoichiometry (as KtI for material to task)
@@ -150,7 +149,7 @@ model.S = pyo.Var(K.keys(),T, domain=pyo.NonNegativeReals)
 
 #Value of inventory
 model.SVal = pyo.Var(domain=pyo.NonNegativeReals)
-model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['Price']*model.S[k,H] for k in K]))
+model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['nu']*model.S[k,H] for k in K]))
 
 #Cost of operation
 model.OpCost = pyo.Var(domain=pyo.NonNegativeReals)
@@ -229,21 +228,85 @@ SolverFactory('cplex').solve(model).write()
 #Visualise solution in Gantt chart
 plt.figure(figsize=(10,3))
 
-gap = 1/500*H
-ticks = []
+bargap = 1/500*H
+marks = []
 lbls = []
 idp = 1
 for j in sorted(J):
     idp = idp - 1
     for i in sorted(Ij[j]):
         idp = idp - 1
-        ticks.append(idp)
+        marks.append(idp)
         lbls.append("{0:s} ({1:s})".format(j,i))
         for t in T:
             if model.W[i,j,t]() > 0:
-                plt.plot([t+gap,t+tau[i]-gap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
+                plt.plot([t+bargap,t+tau[i]-bargap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
                 txt = "{0:.2f}".format(model.B[i,j,t]())
                 plt.text(t+tau[i]/2, idp, txt, color='k', weight='bold', ha='center', va='center')
 plt.xlim(0,H)
-plt.gca().set_yticks(ticks)
+plt.xlabel("Time [h]", fontweight='bold')
+plt.ylabel("Units (Tasks)", fontweight='bold')
+plt.gca().set_yticks(marks)
+plt.gca().set_yticklabels(lbls);
+
+###############################################################################
+
+# VISUALISATION OF DOCUMENTED EXAMPLE DATA
+
+# Setup literature data
+Wart = np.zeros((len(I),len(J),len(T)))
+Bart = np.zeros((len(I),len(J),len(T)))
+#Heater
+Wart[0,0,1] = 1; Bart[0,0,1] = 52;
+Wart[0,0,3] = 1; Bart[0,0,3] = 32;
+Wart[0,0,7] = 1; Bart[0,0,7] = 52;
+#Reactor 1
+Wart[1,1,0] = 1; Bart[1,1,0] = 80;
+Wart[2,1,2] = 1; Bart[2,1,2] = 80;
+Wart[2,1,4] = 1; Bart[2,1,4] = 80;
+Wart[1,1,6] = 1; Bart[1,1,6] = 78;
+Wart[2,1,8] = 1; Bart[2,1,8] = 80;
+#Reactor 2
+Wart[1,2,0] = 1; Bart[1,2,0] = 46;
+Wart[2,2,2] = 1; Bart[2,2,2] = 50;
+Wart[3,2,4] = 1; Bart[3,2,4] = 50;
+Wart[3,2,5] = 1; Bart[3,2,5] = 48;
+Wart[3,2,6] = 1; Bart[3,2,6] = 50;
+Wart[3,2,7] = 1; Bart[3,2,7] = 17;
+Wart[2,2,8] = 1; Bart[2,2,8] = 50;
+#Still
+Wart[4,3,5] = 1; Bart[4,3,5] = 50;
+Wart[4,3,8] = 1; Bart[4,3,8] = 114;
+
+#Visualise solution in Gantt chart
+plt.figure(figsize=(10,3))
+
+bargap = 1/500*H
+marks = []
+lbls = []
+idp = 1
+iart = 0; jart = 0;
+for j in sorted(J):
+    if j == 'Heater':
+        iart = 0
+    elif j == 'Reactor 1' or j == 'Reactor 2':
+        iart = 1
+    elif j == 'Still':
+        iart = 4
+    idp = idp - 1
+    for i in Ij[j]:
+        idp = idp - 1
+        marks.append(idp)
+        lbls.append("{0:s} ({1:s})".format(j,i))
+        for t in T:
+            if Wart[iart,jart,t] > 0:
+                plt.plot([t+bargap,t+tau[i]-bargap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
+                txt = "{0:.2f}".format(Bart[iart,jart,t])
+                plt.text(t+tau[i]/2, idp, txt, color='k', weight='bold', ha='center', va='center')
+        iart = iart + 1
+    jart = jart + 1
+plt.xlim(0,H)
+plt.xlabel("Time [h]", fontweight='bold')
+plt.ylabel("Units (Tasks)", fontweight='bold')
+plt.gca().set_yticks(marks)
 plt.gca().set_yticklabels(lbls);
