@@ -3,6 +3,8 @@
 # Author: Andreas Juhl Sørensen
 # 2024
 
+# %%
+
 #Import PYOMO
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
@@ -15,9 +17,9 @@ import numpy as np
 ##DICTIONARIES are created to carry data in a transparent and general manner
 #States (as K for material)
 K = {
-        'FA':   {'Cap': 500, 'Ini': 500, 'nu':  0},
-        'FB':   {'Cap': 500, 'Ini': 500, 'nu':  0},
-        'FC':   {'Cap': 500, 'Ini': 500, 'nu':  0},
+        'A':   {'Cap': 500, 'Ini': 500, 'nu':  0},
+        'B':   {'Cap': 500, 'Ini': 500, 'nu':  0},
+        'C':   {'Cap': 500, 'Ini': 500, 'nu':  0},
         'HotA': {'Cap': 100, 'Ini':   0, 'nu': -1},
         'AB':   {'Cap': 200, 'Ini':   0, 'nu': -1},
         'BC':   {'Cap': 150, 'Ini':   0, 'nu': -1},
@@ -28,10 +30,10 @@ K = {
 
 #State-to-Task nodes with feed amount/stoichiometry (as KtI for material to task)
 KtI = {
-        ('FA',   'Heating'):    {'xi': 1.0},
-        ('FB',   'R1'):         {'xi': 0.5},
-        ('FC',   'R1'):         {'xi': 0.5},
-        ('FC',   'R3'):         {'xi': 0.2},
+        ('A',   'Heating'):    {'xi': 1.0},
+        ('B',   'R1'):         {'xi': 0.5},
+        ('C',   'R1'):         {'xi': 0.5},
+        ('C',   'R3'):         {'xi': 0.2},
         ('HotA', 'R2'):         {'xi': 0.4},
         ('AB',   'R3'):         {'xi': 0.8},
         ('BC',   'R2'):         {'xi': 0.6},
@@ -63,6 +65,23 @@ JI_union = {
     }
 ###############################################################################
 
+##STATES
+
+#Tasks producing material k
+Iplus = {k: set() for k in K}
+for (i,k) in ItK:
+    Iplus[k].add(i)
+
+#Tasks consuming material k
+Iminus = {k: set() for k in K}
+for (k,i) in KtI:
+    Iminus[k].add(i)
+
+#Storage capacity/maximum inventory of material k
+Sk_max = {k: K[k]['Cap'] for k in K}
+
+###############################################################################
+
 ##TASKS
 
 #All tasks in a set
@@ -92,23 +111,6 @@ tau = {i: max([tauK[(i,k)] for k in Kplus[i]]) for i in I}
 Ji = {i: set() for i in I}
 for (j,i) in JI_union:
     Ji[i].add(j)
-
-###############################################################################
-
-##STATES
-
-#Tasks producing material k
-Iplus = {k: set() for k in K}
-for (i,k) in ItK:
-    Iplus[k].add(i)
-
-#Tasks consuming material k
-Iminus = {k: set() for k in K}
-for (k,i) in KtI:
-    Iminus[k].add(i)
-
-#Storage capacity/maximum inventory of material k
-Sk_max = {k: K[k]['Cap'] for k in K}
 
 ###############################################################################
 
@@ -144,6 +146,9 @@ model.W = pyo.Var(I,J,T,domain=pyo.Boolean)
 #Batch size decision cariable Bijt
 model.B = pyo.Var(I,J,T,domain=pyo.NonNegativeReals)
 
+#Lifted variable handling: M is inventory of unit j at time t
+model.M = pyo.Var(J, T, domain=pyo.NonNegativeReals)
+
 #Inventory variable
 model.S = pyo.Var(K.keys(),T, domain=pyo.NonNegativeReals)
 
@@ -166,9 +171,6 @@ model.obj = pyo.Objective(expr = model.SVal - model.OpCost, sense = pyo.maximize
 
 #Create constraint environment
 model.con = pyo.ConstraintList()
-
-#Lifted variable handling: M is inventory of unit j at time t
-model.M = pyo.Var(J, T, domain=pyo.NonNegativeReals)
 
 #Constraint 1: Only one task per unit at time t
 for j in J:
@@ -203,7 +205,7 @@ for k in K.keys():
         model.con.add(model.S[k,t] == eq)
         eq = model.S[k,t] 
 
-#Equation 2 and 3: Development of W and B over time (using M)
+#Equation 2: Development of M over time
 for j in J:
     eq = 0
     for t in T:
@@ -228,7 +230,9 @@ SolverFactory('cplex').solve(model).write()
 #Visualise solution in Gantt chart
 plt.figure(figsize=(10,3))
 
+#Gap between bars
 bargap = 1/500*H
+#Initialisation
 marks = []
 lbls = []
 idp = 1
@@ -236,13 +240,17 @@ for j in sorted(J):
     idp = idp - 1
     for i in sorted(Ij[j]):
         idp = idp - 1
+        #Marks and titles
         marks.append(idp)
         lbls.append("{0:s} ({1:s})".format(j,i))
         for t in T:
             if model.W[i,j,t]() > 0:
+                #Gantt chart bar
                 plt.plot([t+bargap,t+tau[i]-bargap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
+                #Gantt chart text
                 txt = "{0:.2f}".format(model.B[i,j,t]())
                 plt.text(t+tau[i]/2, idp, txt, color='k', weight='bold', ha='center', va='center')
+#Axis formatting
 plt.xlim(0,H)
 plt.xlabel("Time [h]", fontweight='bold')
 plt.ylabel("Units (Tasks)", fontweight='bold')
@@ -310,3 +318,4 @@ plt.xlabel("Time [h]", fontweight='bold')
 plt.ylabel("Units (Tasks)", fontweight='bold')
 plt.gca().set_yticks(marks)
 plt.gca().set_yticklabels(lbls);
+# %%
