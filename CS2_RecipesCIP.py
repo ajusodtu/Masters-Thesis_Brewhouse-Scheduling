@@ -377,6 +377,7 @@ for j in Jhex:
         model.con.add(eq <= 1)
 
 #CIP every 10 batches constraint
+#Over the whole period, the batch/CIP ratio should be satisfied
 for j in Jhex:
      eq = 0
      eqCIP = 0
@@ -386,7 +387,8 @@ for j in Jhex:
          for i in Ij[j]:
              eq = eq + model.W[i,j,t]
          model.con.add(CIPint*(eqCIP+1) - (eq-eqCIP) >= 0)
-        
+
+#In each time increment of batch duration, the batch/CIP ratio should be satisfied
 for j in Jhex:
     for t in T:
         eq = 0
