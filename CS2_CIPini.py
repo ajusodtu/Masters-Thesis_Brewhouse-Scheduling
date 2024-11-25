@@ -37,7 +37,7 @@ KtI = {
         ('Water', 'Lautering'):     {'xi': 0.25},
         ('W',     'Boiling'):       {'xi': 1.0},
         ('BW',    'WhirlCooling'):  {'xi': 1.0},
-        ('CIPin', 'CIP'):           {'xi': 1.0},
+        ('CIPin', 'aCIP'):           {'xi': 1.0},
     }
 
 #Task-to-State nodes with task processing time and conversion coefficient
@@ -51,7 +51,7 @@ ItK = {
         ('Boiling', 'Waste') :      {'tau': 105,  'rho': 0.142625},
         ('WhirlCooling', 'CW'):     {'tau': 60,   'rho': 0.9025},
         ('WhirlCooling', 'Waste'):  {'tau': 60,   'rho': 0.0975},
-        ('CIP', 'CIPout'):          {'tau': 90,   'rho': 1},
+        ('aCIP', 'CIPout'):          {'tau': 90,   'rho': 1},
     }
 
 #Units able to perform specific tasks node (as JI_union) with capacity
@@ -65,8 +65,8 @@ JI_union = {
         ('WhirlCool', 'WhirlCooling'):      {'Betamin': 0, 'Betamax': 411, 'gamma': 0.01},
         
         #CIP
-        ('Wort Kettle', 'CIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0},
-        ('WhirlCool', 'CIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0},
+        ('Wort Kettle', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01},
+        ('WhirlCool', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01},
     }
 ###############################################################################
 
@@ -240,25 +240,56 @@ model.tc = pyo.Constraint(J, rule = lambda model, j: model.M[j,H] == 0)
 #Define list of units where CIP is necessary (Heat Exchangers)
 Jhex = {'Wort Kettle','WhirlCool'}
 
-#CIP every 10 batches constraint
+#CIP every x batches variable
+CIPint = 3
+
+#CIP cannot be consecutive
 for j in Jhex:
-    eq = 0
-    eqCIP = 1
     for t in T:
-        if t >= sum([tau[i] for i in I]):
-            eqCIP = eqCIP + model.W['CIP',j,t]
-        for i in Ij[j]:
-            eq = eq + model.W[i,j,t]
-        model.con.add(10*eqCIP - eq >= 0)
+        eq = 0
+        for n in T:
+            if n >= (t-2*tau['aCIP']+1) and n <= t:
+                eq = eq + model.W['aCIP',j,n]
+        model.con.add(eq <= 1)
+
+#CIP every 10 batches constraint
+#Over the whole period, the batch/CIP ratio should be satisfied
+for j in Jhex:
+     eq = 0
+     eqCIP = 0
+     for t in T:
+         if t >= sum([tau[i] for i in I])-60:
+             eqCIP = eqCIP + model.W['aCIP',j,t]
+         for i in Ij[j]:
+             eq = eq + model.W[i,j,t]
+         model.con.add(CIPint*(eqCIP+1) - (eq-eqCIP) >= 0)
+
+#In each time increment of batch duration, the batch/CIP ratio should be satisfied
+for j in Jhex:
+    for t in T:
+        eq = 0
+        eqCIP = 0
+        for n in T:
+            if n >= (t-CIPint*tau['MillMashing']-tau['aCIP']) and n <= t:
+                eqCIP = eqCIP + model.W['aCIP',j,n]
+                for i in Ij[j]:
+                    eq = eq + model.W[i,j,n]
+        model.con.add(CIPint*(eqCIP+1) - (eq-eqCIP) >= 0)
         
-        
+#Only 1 CIP at a time
+for t in T:
+    eq = 0
+    for n in T:
+        if n >= (t-tau['aCIP']+1) and n <= t:
+            eq = eq + sum([model.W['aCIP',j,n] for j in J])
+    model.con.add(eq <= 1)
 
 ###############################################################################
 
 ##SOLVE MODEL AND VISUALISE
 
 #Solve the model with PYOMO optimisation
-SolverFactory('cplex').solve(model,options_string='mipgap=0.1').write()
+SolverFactory('cplex').solve(model,options_string='mipgap=0.0001').write()
 
 #Visualise solution in Gantt chart
 plt.figure(figsize=(15,3))
@@ -272,15 +303,21 @@ idp = 1
 Jsort = ['MillMash 1','MillMash 2','Lauter Tun 1','Lauter Tun 2','Wort Kettle','WhirlCool']
 for j in Jsort:
     idp = idp - 1
-    for i in Ij[j]:
+    for i in sorted(Ij[j]):
         idp = idp - 1
         #Marks and titles
         marks.append(idp)
-        lbls.append("{0:s}".format(j))
+        if j == 'Wort Kettle' and i == 'aCIP' or j == 'WhirlCool' and i == 'aCIP':
+            lbls.append("{0:s} (CIP)".format(j))
+        else:
+            lbls.append("{0:s}".format(j))
         for t in T:
             if model.W[i,j,t]() > 0:
                 #Gantt chart bar
-                plt.plot([t/60+bargap,t/60+tau[i]/60-bargap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
+                if i == 'aCIP':
+                    plt.plot([t/60+bargap,t/60+tau[i]/60-bargap], [idp,idp],alpha=.5,color='r', lw=15, solid_capstyle='butt')
+                else:
+                    plt.plot([t/60+bargap,t/60+tau[i]/60-bargap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
                 #Gantt chart text
                 txt = "{0:.0f}".format(model.B[i,j,t]())
                 plt.text(t/60+tau[i]/60/2, idp, txt, color='k', weight='bold', ha='center', va='center')
