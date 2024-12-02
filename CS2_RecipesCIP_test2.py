@@ -23,10 +23,10 @@ K = {
         'Waste':  {'Cap': 10000,'Ini':   0,  'nu':  0},
         
      #Malt
-        'Mp':     {'Cap': 10000,'Ini': 900,'nu':  0},
-        'Mw':     {'Cap': 10000,'Ini': 100,'nu':  0},
-        'Ms':     {'Cap': 10000,'Ini': 10000,'nu':  0},
-        'Mo':     {'Cap': 10000,'Ini': 400,'nu':  0},
+        'Mp':     {'Cap': 10000,'Ini': 1659,'nu':  0},
+        'Mw':     {'Cap': 10000,'Ini': 490.8,'nu':  0},
+        'Ms':     {'Cap': 10000,'Ini': 23.01,'nu':  0},
+        'Mo':     {'Cap': 10000,'Ini': 383.5,'nu':  0},
         
      #Pilsner-specific
         'HMp':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
@@ -263,7 +263,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 18*60
+H = 60*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 
@@ -365,7 +365,7 @@ model.tc = pyo.Constraint(J, rule = lambda model, j: model.M[j,H] == 0)
 Jhex = {'Wort Kettle','WhirlCool'}
 
 #CIP every x batches variable
-CIPint = 3
+CIPint = 5
 
 #In each time increment of batch duration, the batch/CIP ratio should be satisfied
 for j in Jhex:
@@ -392,7 +392,7 @@ for t in T:
 ##SOLVE MODEL AND VISUALISE
 
 #Solve the model with PYOMO optimisation
-SolverFactory('cplex').solve(model,options_string="mipgap=0.10").write()
+SolverFactory('cplex').solve(model,options_string="mipgap=0.1").write()
 
 #Visualise solution in Gantt chart
 plt.figure(figsize=(15,7))

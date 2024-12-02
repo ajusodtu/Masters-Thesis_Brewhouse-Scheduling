@@ -413,7 +413,7 @@ for t in T:
 ##SOLVE MODEL AND VISUALISE
 
 #Solve the model with PYOMO optimisation
-SolverFactory('cplex').solve(model,options_string="mipgap=0.10").write()
+SolverFactory('cplex').solve(model,options_string="mipgap=0.00010").write()
 
 #Visualise solution in Gantt chart
 plt.figure(figsize=(15,7))
