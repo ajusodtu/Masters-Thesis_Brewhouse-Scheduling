@@ -241,23 +241,27 @@ model.tc = pyo.Constraint(J, rule = lambda model, j: model.M[j,H] == 0)
 Jhex = {'Wort Kettle','WhirlCool'}
 
 #Define health variables
-model.H = pyo.Var(J, T, domain=pyo.NonNegativeReals)
-model.Hp = pyo.Var(J, T, domain=pyo.NonNegativeReals)
+model.H = pyo.Var(Jhex, T, domain=pyo.NonNegativeIntegers)
+model.Hp = pyo.Var(Jhex, T, domain=pyo.NonNegativeIntegers)
 
 #CIP every x batches variable
 etamax = 3
 
 #Bounds and relationships
-for t in T:
-    for j in Jhex:
+for j in Jhex:
+    model.con.add(model.Hp[j,0] == 0)
+    for t in T:
         model.con.add(model.H[j,t] <= etamax)
-        model.con.add(0 <= model.H[j,t])
+        model.con.add(model.H[j,t] >= 0)
+        model.con.add(model.Hp[j,t] <= (etamax+1)*model.W['aCIP',j,t])
+        if t >= tgap:
+            model.con.add(model.Hp[j,t] <= etamax+1 - model.H[j,t-tgap])
+            model.con.add(model.Hp[j,t] >= (etamax)*model.W['aCIP',j,t] - model.H[j,t-tgap])
 
 for j in Jhex:
     eq = etamax
     for t in T:
-        Hp = 3
-        eq = eq - sum([model.W[i,j,t] for i in Ij[j]]) + (Hp+1) * model.W['aCIP',j,t]
+        eq = eq - sum([model.W[i,j,t] for i in Ij[j]]) + model.Hp[j,t]
         model.con.add(model.H[j,t] == eq)
         eq = model.H[j,t]
         

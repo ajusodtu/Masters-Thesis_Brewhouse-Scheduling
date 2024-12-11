@@ -240,41 +240,29 @@ model.tc = pyo.Constraint(J, rule = lambda model, j: model.M[j,H] == 0)
 #Define list of units where CIP is necessary (Heat Exchangers)
 Jhex = {'Wort Kettle','WhirlCool'}
 
+#Define health variables
+model.H = pyo.Var(Jhex, T, domain=pyo.NonNegativeIntegers)
+model.F = pyo.Var(Jhex, T, domain=pyo.NonNegativeIntegers)
+
 #CIP every x batches variable
-CIPint = 3
+etamax = 3
 
-# #CIP cannot be consecutive
-# for j in Jhex:
-#     for t in T:
-#         eq = 0
-#         for n in T:
-#             if n >= (t-2*tau['aCIP']+1) and n <= t:
-#                 eq = eq + model.W['aCIP',j,n]
-#         model.con.add(eq <= 1)
-
-# #CIP every 10 batches constraint
-# #Over the whole period, the batch/CIP ratio should be satisfied
-# for j in Jhex:
-#      eq = 0
-#      eqCIP = 0
-#      for t in T:
-#          if t >= sum([tau[i] for i in I])-60:
-#              eqCIP = eqCIP + model.W['aCIP',j,t]
-#          for i in Ij[j]:
-#              eq = eq + model.W[i,j,t]
-#          model.con.add(CIPint*(eqCIP+1) - (eq-eqCIP) >= 0)
-
-#In each time increment of batch duration, the batch/CIP ratio should be satisfied
+#Bounds and relationships
 for j in Jhex:
     for t in T:
-        eq = 0
-        eqCIP = 0
-        for n in T:
-            if n >= (t-CIPint*tau['MillMashing']-2*tau['aCIP']) and n <= t:
-                eqCIP = eqCIP + model.W['aCIP',j,n]
-                for i in Ij[j]:
-                    eq = eq + model.W[i,j,n]
-        model.con.add(CIPint*(eqCIP+1) - (eq-eqCIP) >= 0)
+        model.con.add(model.H[j,t] <= etamax)
+        model.con.add(model.H[j,t] >= 0)
+        model.con.add(model.F[j,t] <= (etamax+1)*model.W['aCIP',j,t])
+        if t >= tgap:
+            model.con.add(model.F[j,t] <= etamax+1 - model.F[j,t-tgap])
+            model.con.add(model.F[j,t] >= (etamax)*model.W['aCIP',j,t] - model.F[j,t-tgap])
+
+for j in Jhex:
+    eq = etamax
+    for t in T:
+        eq = eq - sum([model.W[i,j,t] for i in Ij[j]]) + model.F[j,t]
+        model.con.add(model.H[j,t] == eq)
+        eq = model.H[j,t]
         
 #Only 1 CIP at a time
 for t in T:

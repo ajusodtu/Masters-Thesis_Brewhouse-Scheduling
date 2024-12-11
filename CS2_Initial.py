@@ -17,8 +17,8 @@ import numpy as np
 ##DICTIONARIES are created to carry data in a transparent and general manner
 #States (as K for material)
 K = {
-        'Malt':   {'Cap': 10000,'Ini': 10000,'nu':  0},
-        'Water':  {'Cap': 10000,'Ini': 10000,'nu':  0},
+        'Malt':   {'Cap': 100000,'Ini': 100000,'nu':  0},
+        'Water':  {'Cap': 100000,'Ini': 100000,'nu':  0},
         'HM':     {'Cap': 520,  'Ini':   0,  'nu':  0},
         'SG':     {'Cap': 10000,'Ini':   0,  'nu':  0},
         'W':      {'Cap': 510,  'Ini':   0,  'nu':  0},
