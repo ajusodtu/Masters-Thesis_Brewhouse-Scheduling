@@ -279,10 +279,6 @@ model.M = pyo.Var(J, T, domain=pyo.NonNegativeReals)
 #Inventory variable
 model.S = pyo.Var(K.keys(),T, domain=pyo.NonNegativeReals)
 
-# #Value of inventory
-# model.SVal = pyo.Var(domain=pyo.NonNegativeReals)
-# model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['nu']*model.S[k,H] for k in K]))
-
 #Cost of operation
 model.OpCost = pyo.Var(domain=pyo.NonNegativeReals)
 model.OpCostcon = pyo.Constraint(expr = model.OpCost == 
@@ -298,9 +294,6 @@ model.Prod = pyo.Var(domain=pyo.NonNegativeReals)
 model.Prodcon = pyo.Constraint(expr = model.Prod == 
                                model.S['CWp',H] + model.S['CWw',H] 
                                + model.S['CWs',H] + model.S['CWo',H])
-
-# #Objective function defined as maximisation of throughput
-# model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost, sense = pyo.maximize)
 
 ###############################################################################
 
@@ -376,11 +369,14 @@ for j in J:
         model.con.add(model.F[j,t] <= (etamax[j]+1)*model.W['aCIP',j,t])
         if t >= tgap:
             model.con.add(model.F[j,t] <= etamax[j]+1 - model.F[j,t-tgap])
-            model.con.add(model.F[j,t] >= (etamax[j])*model.W['aCIP',j,t] - model.F[j,t-tgap])
+            model.con.add(model.F[j,t] >= (etamax[j]+1)*model.W['aCIP',j,t] - model.F[j,t-tgap])
 
 #Define changeover variables
 model.Y = pyo.Var(I,I,J,T, domain=pyo.Boolean)
 model.X = pyo.Var(I,J,T, domain=pyo.Boolean)
+
+#Define tasks which do not need CIP
+InoCIP = {'MillMashing - P','MillMashing - W','Lautering - P','Lautering - W','Lautering - P'}
 
 #Health
 for j in J:
@@ -389,9 +385,6 @@ for j in J:
         eq = eq - sum([model.W[i,j,t] for i in Ij[j]]) + model.F[j,t]
         model.con.add(model.H[j,t] == eq)
         eq = model.H[j,t]
-
-# for j in J:
-#     model.con.add(sum([model.W['aCIP',j,t] for t in T]) == 1)
 
 #Bounds and relationships
 for j in J:
@@ -418,19 +411,23 @@ for j in J:
             eq = model.X[i,j,t]
             
 for j in J:
-    for i in Ij[j]:
-        if i == 'MillMashing - xS' or i == 'Lautering - xS' or i == 'Boiling - xS' or i == 'WhirlCooling - xS':
-            for t in T:
+    for t in T:
+        for i in Ij[j]:
+            if i.endswith('- xS'):  # Schwarzbier task
+                # Force Y to be 0 for any transition to non-CIP tasks
                 for im in Ij[j]:
-                    model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t] )
-
+                    if not im == 'aCIP':  # If im is not CIP, forbid the changeover
+                        model.con.add(model.Y[i, im, j, t] == 0)
+                        
 for j in J:
-    for im in Ij[j]:
-        if im == 'MillMashing - zO' or im == 'Lautering - zO' or im == 'Boiling - zO' or im == 'WhirlCooling - zO':
-            for t in T:
+    for t in T:
+        for im in Ij[j]:
+            if im.endswith('- zO'):  # Organic Pilsner task
+                # Force Y to be 0 for any transition to non-CIP tasks
                 for i in Ij[j]:
-                    model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t])
-        
+                    if not i == 'aCIP':  # If i is not CIP, forbid the changeover
+                        model.con.add(model.Y[i, im, j, t] == 0)
+
 #Only 1 CIP at a time
 for t in T:
     eq = 0
@@ -451,7 +448,7 @@ model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost - model.
 ##SOLVE MODEL AND VISUALISE
 
 #Solve the model with PYOMO optimisation
-SolverFactory('cplex').solve(model,tee=True,options_string="mipgap=0.2").write()
+SolverFactory('cplex').solve(model,tee=True,options_string="mipgap=0.0001").write()
 
 #Visualise solution in Gantt chart
 plt.figure(figsize=(15,7))

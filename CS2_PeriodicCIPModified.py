@@ -254,8 +254,8 @@ for j in Jhex:
         model.con.add(model.H[j,t] >= 0)
         model.con.add(model.F[j,t] <= (etamax+1)*model.W['aCIP',j,t])
         if t >= tgap:
-            model.con.add(model.F[j,t] <= etamax+1 - model.F[j,t-tgap])
-            model.con.add(model.F[j,t] >= (etamax)*model.W['aCIP',j,t] - model.F[j,t-tgap])
+            model.con.add(model.F[j,t] <= etamax+1 - model.H[j,t-tgap])
+            model.con.add(model.F[j,t] >= (etamax)*model.W['aCIP',j,t] - model.H[j,t-tgap])
 
 for j in Jhex:
     eq = etamax

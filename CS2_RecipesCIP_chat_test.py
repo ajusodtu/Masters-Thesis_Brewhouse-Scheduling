@@ -263,7 +263,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 27*60
+H = 22*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 
@@ -278,10 +278,6 @@ model.M = pyo.Var(J, T, domain=pyo.NonNegativeReals)
 
 #Inventory variable
 model.S = pyo.Var(K.keys(),T, domain=pyo.NonNegativeReals)
-
-# #Value of inventory
-# model.SVal = pyo.Var(domain=pyo.NonNegativeReals)
-# model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['nu']*model.S[k,H] for k in K]))
 
 #Cost of operation
 model.OpCost = pyo.Var(domain=pyo.NonNegativeReals)
@@ -298,9 +294,6 @@ model.Prod = pyo.Var(domain=pyo.NonNegativeReals)
 model.Prodcon = pyo.Constraint(expr = model.Prod == 
                                model.S['CWp',H] + model.S['CWw',H] 
                                + model.S['CWs',H] + model.S['CWo',H])
-
-# #Objective function defined as maximisation of throughput
-# model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost, sense = pyo.maximize)
 
 ###############################################################################
 
@@ -368,35 +361,28 @@ etamax = {j:JI_union[(j,i)]['etamax'] for (j,i) in JI_union}
 model.H = pyo.Var(J, T, domain=pyo.NonNegativeIntegers)
 model.F = pyo.Var(J, T, domain=pyo.NonNegativeIntegers)
 
-#Bounds and relationships
+#Health: Bounds and relationships
 for j in J:
+    eq = etamax[j]
     for t in T:
         model.con.add(model.H[j,t] <= etamax[j])
         model.con.add(model.H[j,t] >= 0)
         model.con.add(model.F[j,t] <= (etamax[j]+1)*model.W['aCIP',j,t])
         if t >= tgap:
             model.con.add(model.F[j,t] <= etamax[j]+1 - model.F[j,t-tgap])
-            model.con.add(model.F[j,t] >= (etamax[j])*model.W['aCIP',j,t] - model.F[j,t-tgap])
+            model.con.add(model.F[j,t] >= (etamax[j]+1)*model.W['aCIP',j,t] - model.F[j,t-tgap])
+        eq = eq - sum([model.W[i,j,t] for i in Ij[j]]) + model.F[j,t]
+        model.con.add(model.H[j,t] == eq)
+        eq = model.H[j,t]
 
 #Define changeover variables
 model.Y = pyo.Var(I,I,J,T, domain=pyo.Boolean)
 model.X = pyo.Var(I,J,T, domain=pyo.Boolean)
 
-#Health
-for j in J:
-    eq = etamax[j]
-    for t in T:
-        eq = eq - sum([model.W[i,j,t] for i in Ij[j]]) + model.F[j,t]
-        model.con.add(model.H[j,t] == eq)
-        eq = model.H[j,t]
-
-# for j in J:
-#     model.con.add(sum([model.W['aCIP',j,t] for t in T]) == 1)
-
 #Bounds and relationships
 for j in J:
     for i in Ij[j]:
-        if i == 'MillMashing - xS' or i == 'Lautering - xS' or i == 'Boiling - xS' or i == 'WhirlCooling - xS':
+        if i.endswith('- xS'):
             eq = 1
         else:
             eq = 0
@@ -418,19 +404,59 @@ for j in J:
             eq = model.X[i,j,t]
             
 for j in J:
+    for t in T:
+        for i in Ij[j]:
+            if i.endswith('- xS'):  # Schwarzbier task
+                # Force Y to be 0 for any transition to non-CIP tasks
+                for im in Ij[j]:
+                    if not im == 'aCIP':  # If im is not CIP, forbid the changeover
+                        model.con.add(model.Y[i, im, j, t] == 0)
+                        
+for j in J:
+    for t in T:
+        for im in Ij[j]:
+            if im.endswith('- zO'):  # Organic Pilsner task
+                # Force Y to be 0 for any transition to non-CIP tasks
+                for i in Ij[j]:
+                    if not i == 'aCIP':  # If i is not CIP, forbid the changeover
+                        model.con.add(model.Y[i, im, j, t] == 0)
+            
+for j in J:
     for i in Ij[j]:
-        if i == 'MillMashing - xS' or i == 'Lautering - xS' or i == 'Boiling - xS' or i == 'WhirlCooling - xS':
+        if i.endswith('- xS'):
             for t in T:
                 for im in Ij[j]:
                     model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t] )
 
 for j in J:
     for im in Ij[j]:
-        if im == 'MillMashing - zO' or im == 'Lautering - zO' or im == 'Boiling - zO' or im == 'WhirlCooling - zO':
+        if im.endswith('- zO'):
             for t in T:
                 for i in Ij[j]:
                     model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t])
+
+M = 3  # Big-M constant
         
+for j in J:
+    for t in T[:-12]:  # Avoid index out of bounds for t-12
+        for i in Ij[j]:
+            if i.endswith('- xS'):
+                model.con.add(
+                    sum(model.Y[i, im, j, t+z] 
+                        for i in Ij[j] for im in Ij[j] for z in tgap * np.array(range(1, 13))) 
+                    <= M * (1 - model.Y[i, 'aCIP', j, t])
+                    )
+                
+for j in J:
+    for t in T[12:]:  # Avoid index out of bounds for t-12
+        for im in Ij[j]:
+            if im.endswith('- zO'):
+                model.con.add(
+                    sum(model.Y[i, im, j, t-z] 
+                        for i in Ij[j] for im in Ij[j] for z in tgap * np.array(range(1, 13))) 
+                    <= M * (1 - model.Y['aCIP',im, j, t])
+                    )
+
 #Only 1 CIP at a time
 for t in T:
     eq = 0
@@ -442,16 +468,22 @@ for t in T:
 #Throughput
 model.CO = pyo.Var(domain=pyo.NonNegativeReals)
 model.COcon = pyo.Constraint(expr = model.CO == 0.1*sum([model.Y[i,im,j,t] for i in I for im in I for j in Ji[i] for t in T]))
+model.CIP = pyo.Var(domain=pyo.NonNegativeReals)
+model.CIPcon = pyo.Constraint(expr = model.CIP == 100*sum([model.W['aCIP',j,t] for j in J for t in T[26:-26]]))
 
 #Objective function defined as maximisation of throughput
-model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost - model.CO, sense = pyo.maximize)
+model.obj = pyo.Objective(expr = model.Prod + model.SVal + model.CIP - model.OpCost - model.CO, sense = pyo.maximize)
 
 ###############################################################################
 
 ##SOLVE MODEL AND VISUALISE
 
 #Solve the model with PYOMO optimisation
-SolverFactory('cplex').solve(model,tee=True,options_string="mipgap=0.2").write()
+solver = SolverFactory('cplex')
+solver.options['mipgap'] = 0.01
+solver.options['timelimit'] = 600
+
+solver.solve(model,tee=True)
 
 #Visualise solution in Gantt chart
 plt.figure(figsize=(15,7))

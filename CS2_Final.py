@@ -23,10 +23,10 @@ K = {
         'Waste':  {'Cap': 10000,'Ini':   0,  'nu':  0},
         
      #Malt
-        'Mp':     {'Cap': 100000,'Ini': 360.4,'nu':  0},
-        'Mw':     {'Cap': 10000,'Ini': 0,'nu':  0},
-        'Ms':     {'Cap': 10000,'Ini': 23,'nu':  0},
-        'Mo':     {'Cap': 10000,'Ini': 383.4,'nu':  0},
+        'Mp':     {'Cap': 100000,'Ini': 1392.8208,'nu':  0},
+        'Mw':     {'Cap': 10000,'Ini': 408.992,'nu':  0},
+        'Ms':     {'Cap': 10000,'Ini': 15.3372,'nu':  0},
+        'Mo':     {'Cap': 10000,'Ini': 383.43,'nu':  0},
         
      #Pilsner-specific
         'HMp':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
@@ -151,44 +151,44 @@ ItK = {
 #and gamma of performing task
 JI_union = {
         #Pilsner
-        ('MillMash 1', 'MillMashing - P'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':100},
-        ('MillMash 2', 'MillMashing - P'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 1', 'Lautering - P'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 2', 'Lautering - P'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':100},
-        ('Wort Kettle', 'Boiling - P'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3},
-        ('WhirlCool', 'WhirlCooling - P'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3},
+        ('MillMash 1', 'MillMashing - P'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('MillMash 2', 'MillMashing - P'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 1', 'Lautering - P'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 2', 'Lautering - P'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Wort Kettle', 'Boiling - P'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling - P'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
         
         #Wheat beer
-        ('MillMash 1', 'MillMashing - W'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':100},
-        ('MillMash 2', 'MillMashing - W'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 1', 'Lautering - W'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 2', 'Lautering - W'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':100},
-        ('Wort Kettle', 'Boiling - W'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3},
-        ('WhirlCool', 'WhirlCooling - W'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3},
+        ('MillMash 1', 'MillMashing - W'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('MillMash 2', 'MillMashing - W'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 1', 'Lautering - W'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 2', 'Lautering - W'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Wort Kettle', 'Boiling - W'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling - W'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
         
         #Schwarz-bier
-        ('MillMash 1', 'MillMashing - xS'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':100},
-        ('MillMash 2', 'MillMashing - xS'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 1', 'Lautering - xS'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 2', 'Lautering - xS'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':100},
-        ('Wort Kettle', 'Boiling - xS'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3},
-        ('WhirlCool', 'WhirlCooling - xS'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3},
+        ('MillMash 1', 'MillMashing - xS'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('MillMash 2', 'MillMashing - xS'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 1', 'Lautering - xS'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 2', 'Lautering - xS'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Wort Kettle', 'Boiling - xS'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling - xS'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
         
         #Organic
-        ('MillMash 1', 'MillMashing - zO'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':100},
-        ('MillMash 2', 'MillMashing - zO'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 1', 'Lautering - zO'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 2', 'Lautering - zO'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':100},
-        ('Wort Kettle', 'Boiling - zO'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3},
-        ('WhirlCool', 'WhirlCooling - zO'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3},
+        ('MillMash 1', 'MillMashing - zO'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('MillMash 2', 'MillMashing - zO'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 1', 'Lautering - zO'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 2', 'Lautering - zO'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Wort Kettle', 'Boiling - zO'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling - zO'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
         
         #CIP
-        ('MillMash 1', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':100},
-        ('MillMash 2', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 1', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':100},
-        ('Lauter Tun 2', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':100},
-        ('Wort Kettle', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3},
-        ('WhirlCool', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3},
+        ('MillMash 1', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
+        ('MillMash 2', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
+        ('Lauter Tun 1', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
+        ('Lauter Tun 2', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
+        ('Wort Kettle', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3,'theta':0},
+        ('WhirlCool', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3,'theta':0},
     }
 ###############################################################################
 
@@ -263,7 +263,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 27*60
+H = 58*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 
@@ -278,10 +278,6 @@ model.M = pyo.Var(J, T, domain=pyo.NonNegativeReals)
 
 #Inventory variable
 model.S = pyo.Var(K.keys(),T, domain=pyo.NonNegativeReals)
-
-# #Value of inventory
-# model.SVal = pyo.Var(domain=pyo.NonNegativeReals)
-# model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['nu']*model.S[k,H] for k in K]))
 
 #Cost of operation
 model.OpCost = pyo.Var(domain=pyo.NonNegativeReals)
@@ -298,9 +294,6 @@ model.Prod = pyo.Var(domain=pyo.NonNegativeReals)
 model.Prodcon = pyo.Constraint(expr = model.Prod == 
                                model.S['CWp',H] + model.S['CWw',H] 
                                + model.S['CWs',H] + model.S['CWo',H])
-
-# #Objective function defined as maximisation of throughput
-# model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost, sense = pyo.maximize)
 
 ###############################################################################
 
@@ -361,42 +354,43 @@ model.tc = pyo.Constraint(J, rule = lambda model, j: model.M[j,H] == 0)
 
 ##CIP EQUATIONS AND CONSTRAINTS
 
-#Gather maximum health
+#Gather maximum health and task health use
 etamax = {j:JI_union[(j,i)]['etamax'] for (j,i) in JI_union}
+theta = {(j,i):JI_union[(j,i)]['theta'] for (j,i) in JI_union}
 
 #Define health variables
 model.H = pyo.Var(J, T, domain=pyo.NonNegativeIntegers)
-model.F = pyo.Var(J, T, domain=pyo.NonNegativeIntegers)
-
-#Bounds and relationships
-for j in J:
-    for t in T:
-        model.con.add(model.H[j,t] <= etamax[j])
-        model.con.add(model.H[j,t] >= 0)
-        model.con.add(model.F[j,t] <= (etamax[j]+1)*model.W['aCIP',j,t])
-        if t >= tgap:
-            model.con.add(model.F[j,t] <= etamax[j]+1 - model.F[j,t-tgap])
-            model.con.add(model.F[j,t] >= (etamax[j])*model.W['aCIP',j,t] - model.F[j,t-tgap])
+model.Hp = pyo.Var(J, T, domain=pyo.NonNegativeIntegers)
+model.Hm = pyo.Var(J, T, domain=pyo.NonNegativeIntegers)
 
 #Define changeover variables
 model.Y = pyo.Var(I,I,J,T, domain=pyo.Boolean)
 model.X = pyo.Var(I,J,T, domain=pyo.Boolean)
 
-#Health
+#Health: Bounds and relationships
 for j in J:
     eq = etamax[j]
     for t in T:
-        eq = eq - sum([model.W[i,j,t] for i in Ij[j]]) + model.F[j,t]
+        model.con.add(model.H[j,t] <= etamax[j])
+        model.con.add(model.H[j,t] >= 0)
+        model.con.add(model.Hp[j,t] <= (etamax[j])*model.W['aCIP',j,t])
+        if t >= tgap:
+            model.con.add(model.Hp[j,t] <= etamax[j] - model.H[j,t-tgap])
+            model.con.add(model.Hp[j,t] >= (etamax[j])*model.W['aCIP',j,t] - model.H[j,t-tgap])
+            model.con.add(model.Hm[j,t] <= model.H[j,t-tgap])
+            for i in Ij[j]:
+                if i.endswith('- xS'):
+                    for im in Ij[j]:
+                        model.con.add(model.Hm[j,t] >= model.H[j,t-tgap] - etamax[j] * (1-model.Y[i,im,j,t]) )
+                        model.con.add(model.Hm[j,t] <= etamax[j]* model.Y[i,im,j,t])
+        eq = eq - sum([model.W[i,j,t]*theta[j,i] for i in Ij[j]]) + model.Hp[j,t] - model.Hm[j,t]
         model.con.add(model.H[j,t] == eq)
         eq = model.H[j,t]
-
-# for j in J:
-#     model.con.add(sum([model.W['aCIP',j,t] for t in T]) == 1)
 
 #Bounds and relationships
 for j in J:
     for i in Ij[j]:
-        if i == 'MillMashing - xS' or i == 'Lautering - xS' or i == 'Boiling - xS' or i == 'WhirlCooling - xS':
+        if i.endswith('- P'):
             eq = 1
         else:
             eq = 0
@@ -416,21 +410,14 @@ for j in J:
             eq = eq + eqY1 - eqY2
             model.con.add(model.X[i,j,t] == eq)
             eq = model.X[i,j,t]
-            
-for j in J:
-    for i in Ij[j]:
-        if i == 'MillMashing - xS' or i == 'Lautering - xS' or i == 'Boiling - xS' or i == 'WhirlCooling - xS':
-            for t in T:
-                for im in Ij[j]:
-                    model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t] )
 
 for j in J:
     for im in Ij[j]:
-        if im == 'MillMashing - zO' or im == 'Lautering - zO' or im == 'Boiling - zO' or im == 'WhirlCooling - zO':
+        if im.endswith('- zO'):
             for t in T:
                 for i in Ij[j]:
                     model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t])
-        
+
 #Only 1 CIP at a time
 for t in T:
     eq = 0
@@ -451,7 +438,11 @@ model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost - model.
 ##SOLVE MODEL AND VISUALISE
 
 #Solve the model with PYOMO optimisation
-SolverFactory('cplex').solve(model,tee=True,options_string="mipgap=0.2").write()
+solver = SolverFactory('cplex')
+solver.options['mipgap'] = 0.0001
+solver.options['timelimit'] = 21600
+
+solver.solve(model,tee=True)
 
 #Visualise solution in Gantt chart
 plt.figure(figsize=(15,7))
