@@ -19,20 +19,20 @@ import numpy as np
 K = {
      #General
         'Water':  {'Cap': 100000,'Ini': 100000,'nu':  0},
-        'SG':     {'Cap': 10000,'Ini':   0,  'nu':  0},
-        'Waste':  {'Cap': 10000,'Ini':   0,  'nu':  0},
+        'SG':     {'Cap': 100000,'Ini':   0,  'nu':  0},
+        'Waste':  {'Cap': 100000,'Ini':   0,  'nu':  0},
         
      #Malt
-        'Mp':     {'Cap': 100000,'Ini': 1392.8208,'nu':  0},
-        'Mw':     {'Cap': 10000,'Ini': 408.992,'nu':  0},
-        'Ms':     {'Cap': 10000,'Ini': 15.3372,'nu':  0},
+        'Mp':     {'Cap': 10000,'Ini': 894.67,'nu':  0},
+        'Mw':     {'Cap': 10000,'Ini': 766.86,'nu':  0},
+        'Ms':     {'Cap': 10000,'Ini': 255.62,'nu':  0},
         'Mo':     {'Cap': 10000,'Ini': 383.43,'nu':  0},
         
      #Pilsner-specific
         'HMp':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
         'Wp':     {'Cap': 510,  'Ini':   0,  'nu':  -0.01},
         'BWp':    {'Cap': 440,  'Ini':   0,  'nu':  -0.01},
-        'CWp':    {'Cap': 10000,'Ini':   0,  'nu':  0.01},
+        'CWp':    {'Cap': 20000,'Ini':   0,  'nu':  0.01},
         
      #Wheat-specific
         'HMw':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
@@ -68,8 +68,7 @@ KtI = {
         ('BWp',   'WhirlCooling - P'):  {'xi': 1.0},
         
         #Wheat beer
-        ('Mp',  'MillMashing - W'):     {'xi': 0.09},
-        ('Mw',  'MillMashing - W'):     {'xi': 0.16},
+        ('Mw',  'MillMashing - W'):     {'xi': 0.25},
         ('Water', 'MillMashing - W'):   {'xi': 0.75},
         ('HMw',    'Lautering - W'):    {'xi': 0.75},
         ('Water', 'Lautering - W'):     {'xi': 0.25},
@@ -77,8 +76,7 @@ KtI = {
         ('BWw',    'WhirlCooling - W'): {'xi': 1.0},
         
         #Schwarz-bier
-        ('Mp',  'MillMashing - xS'):   {'xi': 0.235},
-        ('Ms',  'MillMashing - xS'):   {'xi': 0.015},
+        ('Ms',  'MillMashing - xS'):   {'xi': 0.25},
         ('Water', 'MillMashing - xS'): {'xi': 0.75},
         ('HMs',    'Lautering - xS'):     {'xi': 0.75},
         ('Water', 'Lautering - xS'):     {'xi': 0.25},
@@ -155,40 +153,40 @@ JI_union = {
         ('MillMash 2', 'MillMashing - P'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 1', 'Lautering - P'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 2', 'Lautering - P'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
-        ('Wort Kettle', 'Boiling - P'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
-        ('WhirlCool', 'WhirlCooling - P'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('Wort Kettle', 'Boiling - P'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':9,'theta':1},
+        ('WhirlCool', 'WhirlCooling - P'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':9,'theta':1},
         
         #Wheat beer
         ('MillMash 1', 'MillMashing - W'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('MillMash 2', 'MillMashing - W'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 1', 'Lautering - W'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 2', 'Lautering - W'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
-        ('Wort Kettle', 'Boiling - W'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
-        ('WhirlCool', 'WhirlCooling - W'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('Wort Kettle', 'Boiling - W'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':9,'theta':1},
+        ('WhirlCool', 'WhirlCooling - W'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':9,'theta':1},
         
         #Schwarz-bier
         ('MillMash 1', 'MillMashing - xS'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('MillMash 2', 'MillMashing - xS'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 1', 'Lautering - xS'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 2', 'Lautering - xS'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
-        ('Wort Kettle', 'Boiling - xS'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
-        ('WhirlCool', 'WhirlCooling - xS'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('Wort Kettle', 'Boiling - xS'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':9,'theta':1},
+        ('WhirlCool', 'WhirlCooling - xS'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':9,'theta':1},
         
         #Organic
         ('MillMash 1', 'MillMashing - zO'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('MillMash 2', 'MillMashing - zO'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 1', 'Lautering - zO'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 2', 'Lautering - zO'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
-        ('Wort Kettle', 'Boiling - zO'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
-        ('WhirlCool', 'WhirlCooling - zO'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('Wort Kettle', 'Boiling - zO'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':9,'theta':1},
+        ('WhirlCool', 'WhirlCooling - zO'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':9,'theta':1},
         
         #CIP
         ('MillMash 1', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
         ('MillMash 2', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
         ('Lauter Tun 1', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
         ('Lauter Tun 2', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
-        ('Wort Kettle', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3,'theta':0},
-        ('WhirlCool', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3,'theta':0},
+        ('Wort Kettle', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':9,'theta':0},
+        ('WhirlCool', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':9,'theta':0},
     }
 ###############################################################################
 
@@ -263,7 +261,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 58*60
+H = 47.75*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 
@@ -374,14 +372,15 @@ for j in J:
         model.con.add(model.H[j,t] <= etamax[j])
         model.con.add(model.H[j,t] >= 0)
         model.con.add(model.Hp[j,t] <= (etamax[j])*model.W['aCIP',j,t])
+        model.con.add(model.Hm[j,t] >= 0)
         if t >= tgap:
             model.con.add(model.Hp[j,t] <= etamax[j] - model.H[j,t-tgap])
             model.con.add(model.Hp[j,t] >= (etamax[j])*model.W['aCIP',j,t] - model.H[j,t-tgap])
-            model.con.add(model.Hm[j,t] <= model.H[j,t-tgap])
             for i in Ij[j]:
                 if i.endswith('- xS'):
                     for im in Ij[j]:
                         model.con.add(model.Hm[j,t] >= model.H[j,t-tgap] - etamax[j] * (1-model.Y[i,im,j,t]) )
+                        model.con.add(model.Hm[j,t] <= model.H[j,t-tgap] + etamax[j] * (1-model.Y[i,im,j,t]) )
                         model.con.add(model.Hm[j,t] <= etamax[j]* model.Y[i,im,j,t])
         eq = eq - sum([model.W[i,j,t]*theta[j,i] for i in Ij[j]]) + model.Hp[j,t] - model.Hm[j,t]
         model.con.add(model.H[j,t] == eq)
@@ -390,19 +389,18 @@ for j in J:
 #Bounds and relationships
 for j in J:
     for i in Ij[j]:
-        if i.endswith('- xS'):
+        if i.endswith('- P'):
             eq = 1
         else:
             eq = 0
         for t in T:
             model.con.add(sum([model.X[iw,j,t] for iw in Ij[j]]) == 1)
-            model.con.add(sum([model.Y[i,im,j,t] for i in Ij[j] for im in Ij[j] for t in T]) >= 1)
             eqY1 = 0
             eqY2 = 0
             if t >= tau[i]:
                 model.con.add(sum([model.W[i,j,z] for z in tgap*np.array(range(int((t-tau[i])/tgap),int(t/tgap)))]) <= model.X[i,j,t])
             for im in Ij[j]:
-                if i != im and t >= 3*tau['MillMashing - P']-tgap:
+                if i != im and t >= 7*tau['MillMashing - P']-tgap:
                     eqY1 = eqY1 + model.Y[im,i,j,t-tgap]
                     eqY2 = eqY2 + model.Y[i,im,j,t-tgap]
                 elif i == im:
@@ -414,9 +412,9 @@ for j in J:
 for j in J:
     for im in Ij[j]:
         if im.endswith('- zO'):
-            for t in T:
+            for t in T[1:]:
                 for i in Ij[j]:
-                    model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t])
+                    model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t-tgap])
 
 #Only 1 CIP at a time
 for t in T:
@@ -440,7 +438,7 @@ model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost - model.
 #Solve the model with PYOMO optimisation
 solver = SolverFactory('cplex')
 solver.options['mipgap'] = 0.0001
-solver.options['timelimit'] = 21600
+solver.options['timelimit'] = 108000
 
 solver.solve(model,tee=True)
 
@@ -495,3 +493,4 @@ plt.ylabel("Units", fontweight='bold')
 plt.gca().set_yticks(marks)
 plt.gca().set_yticklabels(lbls);
 # %%
+

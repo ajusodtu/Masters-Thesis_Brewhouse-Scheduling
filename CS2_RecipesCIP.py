@@ -263,7 +263,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 22*60
+H = 21.5*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 
@@ -374,14 +374,15 @@ for j in J:
         model.con.add(model.H[j,t] <= etamax[j])
         model.con.add(model.H[j,t] >= 0)
         model.con.add(model.Hp[j,t] <= (etamax[j])*model.W['aCIP',j,t])
+        model.con.add(model.Hm[j,t] >= 0)
         if t >= tgap:
             model.con.add(model.Hp[j,t] <= etamax[j] - model.H[j,t-tgap])
             model.con.add(model.Hp[j,t] >= (etamax[j])*model.W['aCIP',j,t] - model.H[j,t-tgap])
-            model.con.add(model.Hm[j,t] <= model.H[j,t-tgap])
             for i in Ij[j]:
                 if i.endswith('- xS'):
                     for im in Ij[j]:
                         model.con.add(model.Hm[j,t] >= model.H[j,t-tgap] - etamax[j] * (1-model.Y[i,im,j,t]) )
+                        model.con.add(model.Hm[j,t] <= model.H[j,t-tgap] + etamax[j] * (1-model.Y[i,im,j,t]) )
                         model.con.add(model.Hm[j,t] <= etamax[j]* model.Y[i,im,j,t])
         eq = eq - sum([model.W[i,j,t]*theta[j,i] for i in Ij[j]]) + model.Hp[j,t] - model.Hm[j,t]
         model.con.add(model.H[j,t] == eq)
@@ -414,9 +415,9 @@ for j in J:
 for j in J:
     for im in Ij[j]:
         if im.endswith('- zO'):
-            for t in T:
+            for t in T[1:]:
                 for i in Ij[j]:
-                    model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t])
+                    model.con.add(etamax[j]*model.Y[i,im,j,t] <= model.H[j,t-tgap])
 
 #Only 1 CIP at a time
 for t in T:
@@ -440,7 +441,7 @@ model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost - model.
 #Solve the model with PYOMO optimisation
 solver = SolverFactory('cplex')
 solver.options['mipgap'] = 0.0001
-solver.options['timelimit'] = 21600
+solver.options['timelimit'] = 7200
 
 solver.solve(model,tee=True)
 
