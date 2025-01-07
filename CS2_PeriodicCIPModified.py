@@ -3,6 +3,8 @@
 # Author: Andreas Juhl Sørensen
 # 2024
 
+#The only difference compared to CS2_PeriodicCIPini is the inclusion of 0.01 as inventory value
+
 # %%
 
 #Import PYOMO
@@ -158,10 +160,6 @@ model.M = pyo.Var(J, T, domain=pyo.NonNegativeReals)
 #Inventory variable
 model.S = pyo.Var(K.keys(),T, domain=pyo.NonNegativeReals)
 
-# #Value of inventory
-# model.SVal = pyo.Var(domain=pyo.NonNegativeReals)
-# model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['nu']*model.S[k,H] for k in K]))
-
 #Cost of operation
 model.OpCost = pyo.Var(domain=pyo.NonNegativeReals)
 model.OpCostcon = pyo.Constraint(expr = model.OpCost == 
@@ -285,6 +283,7 @@ marks = []
 lbls = []
 idp = 1
 Jsort = ['MillMash 1','MillMash 2','Lauter Tun 1','Lauter Tun 2','Wort Kettle','WhirlCool']
+#Plotting over units and tasks - some formatting is performed for tasks relating to beer types
 for j in Jsort:
     idp = idp - 1
     for i in sorted(Ij[j]):

@@ -1,4 +1,4 @@
-# Brewery Case Study - CIP at change of recipe Test Implementation
+# Brewery Case Study - CIP at change of recipe Implementation
 # MILP Script
 # Author: Andreas Juhl Sørensen
 # 2024
@@ -388,7 +388,7 @@ for j in J:
         model.con.add(model.H[j,t] == eq)
         eq = model.H[j,t]
 
-#Bounds and relationships
+#Changeovers: Bounds and relationships
 for j in J:
     for i in Ij[j]:
         if i.endswith('- xS'):
@@ -412,6 +412,7 @@ for j in J:
             model.con.add(model.X[i,j,t] == eq)
             eq = model.X[i,j,t]
 
+#Cleaning before production of organic pilsner
 for j in J:
     for im in Ij[j]:
         if im.endswith('- zO'):
@@ -427,11 +428,11 @@ for t in T:
             eq = eq + sum([model.W['aCIP',j,n] for j in J])
     model.con.add(eq <= 1)
     
-#Throughput
+#Changeover cost
 model.CO = pyo.Var(domain=pyo.NonNegativeReals)
 model.COcon = pyo.Constraint(expr = model.CO == 0.1*sum([model.Y[i,im,j,t] for i in I for im in I for j in Ji[i] for t in T]))
 
-#Objective function defined as maximisation of throughput
+#Objective function defined as maximisation of throughput (and minimisation of changeovers)
 model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost - model.CO, sense = pyo.maximize)
 
 ###############################################################################
@@ -455,6 +456,7 @@ marks = []
 lbls = []
 idp = 1
 Jsort = ['MillMash 1','MillMash 2','Lauter Tun 1','Lauter Tun 2','Wort Kettle','WhirlCool']
+#Plotting over units and tasks - some formatting is performed for tasks relating to beer types
 for j in Jsort:
     idp = idp - 1
     idBeerType = 0

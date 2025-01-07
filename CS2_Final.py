@@ -1,4 +1,4 @@
-# Brewery Case Study - Final Implementation
+# Brewery Case Study - Final Implementation, Representative Example
 # MILP Script
 # Author: Andreas Juhl Sørensen
 # 2024
@@ -19,20 +19,20 @@ import numpy as np
 K = {
      #General
         'Water':  {'Cap': 100000,'Ini': 100000,'nu':  0},
-        'SG':     {'Cap': 100000,'Ini':   0,  'nu':  0},
-        'Waste':  {'Cap': 100000,'Ini':   0,  'nu':  0},
+        'SG':     {'Cap': 10000,'Ini':   0,  'nu':  0},
+        'Waste':  {'Cap': 10000,'Ini':   0,  'nu':  0},
         
      #Malt
-        'Mp':     {'Cap': 10000,'Ini': 894.67,'nu':  0},
-        'Mw':     {'Cap': 10000,'Ini': 766.86,'nu':  0},
-        'Ms':     {'Cap': 10000,'Ini': 255.62,'nu':  0},
+        'Mp':     {'Cap': 100000,'Ini': 1411.0224,'nu':  0},
+        'Mw':     {'Cap': 10000,'Ini': 490.7904,'nu':  0},
+        'Ms':     {'Cap': 10000,'Ini': 15.3372,'nu':  0},
         'Mo':     {'Cap': 10000,'Ini': 383.43,'nu':  0},
         
      #Pilsner-specific
         'HMp':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
         'Wp':     {'Cap': 510,  'Ini':   0,  'nu':  -0.01},
         'BWp':    {'Cap': 440,  'Ini':   0,  'nu':  -0.01},
-        'CWp':    {'Cap': 20000,'Ini':   0,  'nu':  0.01},
+        'CWp':    {'Cap': 10000,'Ini':   0,  'nu':  0.01},
         
      #Wheat-specific
         'HMw':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
@@ -68,7 +68,8 @@ KtI = {
         ('BWp',   'WhirlCooling - P'):  {'xi': 1.0},
         
         #Wheat beer
-        ('Mw',  'MillMashing - W'):     {'xi': 0.25},
+        ('Mp',  'MillMashing - W'):     {'xi': 0.09},
+        ('Mw',  'MillMashing - W'):     {'xi': 0.16},
         ('Water', 'MillMashing - W'):   {'xi': 0.75},
         ('HMw',    'Lautering - W'):    {'xi': 0.75},
         ('Water', 'Lautering - W'):     {'xi': 0.25},
@@ -76,7 +77,8 @@ KtI = {
         ('BWw',    'WhirlCooling - W'): {'xi': 1.0},
         
         #Schwarz-bier
-        ('Ms',  'MillMashing - xS'):   {'xi': 0.25},
+        ('Mp',  'MillMashing - xS'):   {'xi': 0.235},
+        ('Ms',  'MillMashing - xS'):   {'xi': 0.015},
         ('Water', 'MillMashing - xS'): {'xi': 0.75},
         ('HMs',    'Lautering - xS'):     {'xi': 0.75},
         ('Water', 'Lautering - xS'):     {'xi': 0.25},
@@ -153,41 +155,41 @@ JI_union = {
         ('MillMash 2', 'MillMashing - P'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 1', 'Lautering - P'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 2', 'Lautering - P'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
-        ('Wort Kettle', 'Boiling - P'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':9,'theta':1},
-        ('WhirlCool', 'WhirlCooling - P'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':9,'theta':1},
+        ('Wort Kettle', 'Boiling - P'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling - P'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
         
         #Wheat beer
         ('MillMash 1', 'MillMashing - W'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('MillMash 2', 'MillMashing - W'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 1', 'Lautering - W'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 2', 'Lautering - W'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
-        ('Wort Kettle', 'Boiling - W'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':9,'theta':1},
-        ('WhirlCool', 'WhirlCooling - W'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':9,'theta':1},
+        ('Wort Kettle', 'Boiling - W'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling - W'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
         
         #Schwarz-bier
         ('MillMash 1', 'MillMashing - xS'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('MillMash 2', 'MillMashing - xS'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 1', 'Lautering - xS'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 2', 'Lautering - xS'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
-        ('Wort Kettle', 'Boiling - xS'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':9,'theta':1},
-        ('WhirlCool', 'WhirlCooling - xS'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':9,'theta':1},
+        ('Wort Kettle', 'Boiling - xS'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling - xS'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
         
         #Organic
         ('MillMash 1', 'MillMashing - zO'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('MillMash 2', 'MillMashing - zO'):   {'Betamin': 1, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 1', 'Lautering - zO'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
         ('Lauter Tun 2', 'Lautering - zO'):   {'Betamin': 1, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
-        ('Wort Kettle', 'Boiling - zO'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':9,'theta':1},
-        ('WhirlCool', 'WhirlCooling - zO'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':9,'theta':1},
+        ('Wort Kettle', 'Boiling - zO'):      {'Betamin': 1, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling - zO'):   {'Betamin': 1, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
         
         #CIP
         ('MillMash 1', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
         ('MillMash 2', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
         ('Lauter Tun 1', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
         ('Lauter Tun 2', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':30,'theta':0},
-        ('Wort Kettle', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':9,'theta':0},
-        ('WhirlCool', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':9,'theta':0},
-    }
+        ('Wort Kettle', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3,'theta':0},
+        ('WhirlCool', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3,'theta':0},
+    }   
 ###############################################################################
 
 ##STATES
@@ -261,7 +263,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 47.75*60
+H = 48*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 
@@ -292,6 +294,8 @@ model.Prod = pyo.Var(domain=pyo.NonNegativeReals)
 model.Prodcon = pyo.Constraint(expr = model.Prod == 
                                model.S['CWp',H] + model.S['CWw',H] 
                                + model.S['CWs',H] + model.S['CWo',H])
+
+#Objective defined later with the introduction of changeover variables
 
 ###############################################################################
 
@@ -386,7 +390,7 @@ for j in J:
         model.con.add(model.H[j,t] == eq)
         eq = model.H[j,t]
 
-#Bounds and relationships
+#Changeovers: Bounds and relationships
 for j in J:
     for i in Ij[j]:
         if i.endswith('- P'):
@@ -409,6 +413,7 @@ for j in J:
             model.con.add(model.X[i,j,t] == eq)
             eq = model.X[i,j,t]
 
+#Cleaning before organic pilsner
 for j in J:
     for im in Ij[j]:
         if im.endswith('- zO'):
@@ -424,11 +429,11 @@ for t in T:
             eq = eq + sum([model.W['aCIP',j,n] for j in J])
     model.con.add(eq <= 1)
     
-#Throughput
+#Changeover costs
 model.CO = pyo.Var(domain=pyo.NonNegativeReals)
 model.COcon = pyo.Constraint(expr = model.CO == 0.1*sum([model.Y[i,im,j,t] for i in I for im in I for j in Ji[i] for t in T]))
 
-#Objective function defined as maximisation of throughput
+#Objective function defined as maximisation of throughput and minimisation of changeovers
 model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost - model.CO, sense = pyo.maximize)
 
 ###############################################################################
@@ -452,6 +457,7 @@ marks = []
 lbls = []
 idp = 1
 Jsort = ['MillMash 1','MillMash 2','Lauter Tun 1','Lauter Tun 2','Wort Kettle','WhirlCool']
+#Plotting over units and tasks - some formatting is performed for tasks relating to beer types
 for j in Jsort:
     idp = idp - 1
     idBeerType = 0

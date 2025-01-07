@@ -238,6 +238,7 @@ marks = []
 lbls = []
 idp = 1
 Jsort = ['MillMash 1','MillMash 2','Lauter Tun 1','Lauter Tun 2','Wort Kettle','WhirlCool']
+#Plotting over units and tasks
 for j in Jsort:
     idp = idp - 1
     for i in Ij[j]:

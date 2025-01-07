@@ -261,10 +261,6 @@ model.M = pyo.Var(J, T, domain=pyo.NonNegativeReals)
 #Inventory variable
 model.S = pyo.Var(K.keys(),T, domain=pyo.NonNegativeReals)
 
-# #Value of inventory
-# model.SVal = pyo.Var(domain=pyo.NonNegativeReals)
-# model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['nu']*model.S[k,H] for k in K]))
-
 #Cost of operation
 model.OpCost = pyo.Var(domain=pyo.NonNegativeReals)
 model.OpCostcon = pyo.Constraint(expr = model.OpCost == 
@@ -344,7 +340,7 @@ model.tc = pyo.Constraint(J, rule = lambda model, j: model.M[j,H] == 0)
 ##SOLVE MODEL AND VISUALISE
 
 #Solve the model with PYOMO optimisation
-SolverFactory('cplex').solve(model,options_string="mipgap=0.10").write()
+SolverFactory('cplex').solve(model,options_string="mipgap=0.0001").write()
 
 #Visualise solution in Gantt chart
 plt.figure(figsize=(15,7))
@@ -356,6 +352,7 @@ marks = []
 lbls = []
 idp = 1
 Jsort = ['MillMash 1','MillMash 2','Lauter Tun 1','Lauter Tun 2','Wort Kettle','WhirlCool']
+#Plotting over units and tasks - some formatting is performed for tasks relating to beer types
 for j in Jsort:
     idp = idp - 1
     idBeerType = 0
