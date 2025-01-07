@@ -10,5 +10,7 @@ The reproduction of documented scheduling results considered in Chapter 3 of the
 
 The latter simulation of a brewhouse considered in Chapter 4 of the thesis (Case Study II) is contained within the remaining files in this repository.
 They are named according to the section they are a part of.
+
 Since the final implementation contains the developments in all of the previous code developments, all comments have been gathered in a single file for the final implementation:
+
 "CS2_Final_wComments.ipynb": Contains the final implementation with a detailed description of the procedure and equations used in every part of the model development. Requires a Jupyter Notebook-compatible IDE, such as Jupyter Notebook or VS Code.
