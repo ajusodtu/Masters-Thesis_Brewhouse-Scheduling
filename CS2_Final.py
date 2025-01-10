@@ -29,28 +29,28 @@ K = {
         'Mo':     {'Cap': 10000,'Ini': 383.43,'nu':  0},
         
      #Pilsner-specific
-        'HMp':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
+        'HMp':    {'Cap': 0,  'Ini':   0,  'nu':  -0.01},
         'Wp':     {'Cap': 510,  'Ini':   0,  'nu':  -0.01},
         'BWp':    {'Cap': 440,  'Ini':   0,  'nu':  -0.01},
-        'CWp':    {'Cap': 10000,'Ini':   0,  'nu':  0.01},
+        'CWp':    {'Cap': 10000,'Ini':   0,  'nu':  0.03},
         
      #Wheat-specific
-        'HMw':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
+        'HMw':    {'Cap': 0,  'Ini':   0,  'nu':  -0.01},
         'Ww':     {'Cap': 510,  'Ini':   0,  'nu':  -0.01},
         'BWw':    {'Cap': 440,  'Ini':   0,  'nu':  -0.01},
-        'CWw':    {'Cap': 10000,'Ini':   0,  'nu':  0.01},
+        'CWw':    {'Cap': 10000,'Ini':   0,  'nu':  0.03},
         
      #Schwarz-bier
-        'HMs':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
+        'HMs':    {'Cap': 0,  'Ini':   0,  'nu':  -0.01},
         'Ws':     {'Cap': 510,  'Ini':   0,  'nu':  -0.01},
         'BWs':    {'Cap': 440,  'Ini':   0,  'nu':  -0.01},
-        'CWs':    {'Cap': 10000,'Ini':   0,  'nu':  0.01},
+        'CWs':    {'Cap': 10000,'Ini':   0,  'nu':  0.03},
         
      #Organic Pilsner
-         'HMo':    {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
+         'HMo':    {'Cap': 0,  'Ini':   0,  'nu':  -0.01},
          'Wo':     {'Cap': 510,  'Ini':   0,  'nu':  -0.01},
          'BWo':    {'Cap': 440,  'Ini':   0,  'nu':  -0.01},
-         'CWo':    {'Cap': 10000,'Ini':   0,  'nu':  0.01},
+         'CWo':    {'Cap': 10000,'Ini':   0,  'nu':  0.03},
          
      #CIP
          'CIPin':  {'Cap': 10000,'Ini': 10000,'nu':  0},
@@ -263,7 +263,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 48*60
+H = 48.5*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 

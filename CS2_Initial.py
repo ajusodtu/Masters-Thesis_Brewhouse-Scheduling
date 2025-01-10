@@ -17,7 +17,7 @@ import numpy as np
 ##DICTIONARIES are created to carry data in a transparent and general manner
 #States (as K for material)
 K = {
-        'Malt':   {'Cap': 100000,'Ini': 100000,'nu':  0},
+        'Malt':   {'Cap': 100000,'Ini': 766.86,'nu':  0},
         'Water':  {'Cap': 100000,'Ini': 100000,'nu':  0},
         'HM':     {'Cap': 520,  'Ini':   0,  'nu':  0},
         'SG':     {'Cap': 10000,'Ini':   0,  'nu':  0},
@@ -133,7 +133,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 18*60
+H = 20*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 

@@ -1,4 +1,4 @@
-# Brewery Case Study - Initial, Modified Implementation
+# Brewery Case Study - Periodic CIP Implementation
 # MILP Script
 # Author: Andreas Juhl Sørensen
 # 2024
@@ -17,7 +17,7 @@ import numpy as np
 ##DICTIONARIES are created to carry data in a transparent and general manner
 #States (as K for material)
 K = {
-        'Malt':   {'Cap': 100000,'Ini': 766.86,'nu':  0},
+        'Malt':   {'Cap': 100000,'Ini': 100000,'nu':  0},
         'Water':  {'Cap': 400000,'Ini': 400000,'nu':  0},
         'HM':     {'Cap': 520,  'Ini':   0,  'nu':  -0.01},
         'SG':     {'Cap': 100000,'Ini':   0,  'nu':  0},
@@ -25,6 +25,8 @@ K = {
         'BW':     {'Cap': 440,  'Ini':   0,  'nu':  -0.01},
         'CW':     {'Cap': 100000,'Ini':   0,  'nu':  0.03},
         'Waste':  {'Cap': 100000,'Ini':   0,  'nu':  0},
+        'CIPin':  {'Cap': 10000,'Ini': 10000,'nu':  0},
+        'CIPout': {'Cap': 10000,'Ini':   0,  'nu':  0},
     }
 
 #State-to-Task nodes with feed amount/stoichiometry (as KtI for material to task)
@@ -35,6 +37,7 @@ KtI = {
         ('Water', 'Lautering'):     {'xi': 0.25},
         ('W',     'Boiling'):       {'xi': 1.0},
         ('BW',    'WhirlCooling'):  {'xi': 1.0},
+        ('CIPin', 'aCIP'):           {'xi': 1.0},
     }
 
 #Task-to-State nodes with task processing time and conversion coefficient
@@ -48,18 +51,24 @@ ItK = {
         ('Boiling', 'Waste') :      {'tau': 105,  'rho': 0.142625},
         ('WhirlCooling', 'CW'):     {'tau': 60,   'rho': 0.9025},
         ('WhirlCooling', 'Waste'):  {'tau': 60,   'rho': 0.0975},
+        ('aCIP', 'CIPout'):          {'tau': 90,   'rho': 1},
     }
 
 #Units able to perform specific tasks node (as JI_union) with capacity
 #and gamma of performing task
 JI_union = {
-        ('MillMash 1', 'MillMashing'):      {'Betamin': 0, 'Betamax': 273, 'gamma': 0.01},
-        ('MillMash 2', 'MillMashing'):      {'Betamin': 0, 'Betamax': 273, 'gamma': 0.01},
-        ('Lauter Tun 1', 'Lautering'):      {'Betamin': 0, 'Betamax': 328, 'gamma': 0.01},
-        ('Lauter Tun 2', 'Lautering'):      {'Betamin': 0, 'Betamax': 328, 'gamma': 0.01},
-        ('Wort Kettle', 'Boiling'):         {'Betamin': 0, 'Betamax': 450, 'gamma': 0.01},
-        ('WhirlCool', 'WhirlCooling'):      {'Betamin': 0, 'Betamax': 411, 'gamma': 0.01},
+        ('MillMash 1', 'MillMashing'):      {'Betamin': 0, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('MillMash 2', 'MillMashing'):      {'Betamin': 0, 'Betamax': 273, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 1', 'Lautering'):      {'Betamin': 0, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Lauter Tun 2', 'Lautering'):      {'Betamin': 0, 'Betamax': 328, 'gamma': 0.01, 'etamax':30,'theta':1},
+        ('Wort Kettle', 'Boiling'):         {'Betamin': 0, 'Betamax': 450, 'gamma': 0.01, 'etamax':3,'theta':1},
+        ('WhirlCool', 'WhirlCooling'):      {'Betamin': 0, 'Betamax': 411, 'gamma': 0.01, 'etamax':3,'theta':1},
+        
+        #CIP
+        ('Wort Kettle', 'aCIP'):             {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3,'theta':0},
+        ('WhirlCool', 'aCIP'):               {'Betamin': 1, 'Betamax': 1,  'gamma': 0.01, 'etamax':3,'theta':0},
     }
+
 ###############################################################################
 
 ##STATES
@@ -133,7 +142,7 @@ Betamax = {(i,j):JI_union[(j,i)]['Betamax'] for (j,i) in JI_union}
 model = pyo.ConcreteModel()
 
 #Planning horizon (H), time interval (tgap) and time (T)
-H = 20*60
+H = 18*60
 tgap = 15
 T = tgap*np.array(range(0,int(1/tgap*H)+1))
 
@@ -163,7 +172,7 @@ model.SValcon = pyo.Constraint(expr = model.SVal == sum([K[k]['nu']*model.S[k,t]
 model.Prod = pyo.Var(domain=pyo.NonNegativeReals)
 model.Prodcon = pyo.Constraint(expr = model.Prod == model.S['CW',H])
 
-#Objective function defined as maximisation of throughput with an added term, which punishes intermediate material storage
+#Objective function defined as maximisation of throughput
 model.obj = pyo.Objective(expr = model.Prod + model.SVal - model.OpCost, sense = pyo.maximize)
 
 ###############################################################################
@@ -223,13 +232,47 @@ model.tc = pyo.Constraint(J, rule = lambda model, j: model.M[j,H] == 0)
 
 ###############################################################################
 
+##CIP EQUATIONS AND CONSTRAINTS
+
+#Gather maximum health and task health use
+etamax = {j:JI_union[(j,i)]['etamax'] for (j,i) in JI_union}
+theta = {(j,i):JI_union[(j,i)]['theta'] for (j,i) in JI_union}
+
+#Define health variables
+model.H = pyo.Var(J, T, domain=pyo.NonNegativeIntegers)
+model.Hp = pyo.Var(J, T, domain=pyo.NonNegativeIntegers)
+
+#Health: Bounds and relationships
+for j in J:
+    eq = etamax[j]
+    for t in T:
+        model.con.add(model.H[j,t] <= etamax[j])
+        model.con.add(model.H[j,t] >= 0)
+        model.con.add(model.Hp[j,t] <= (etamax[j])*model.W['aCIP',j,t])
+        if t >= tgap:
+            model.con.add(model.Hp[j,t] <= etamax[j] - model.H[j,t-tgap])
+            model.con.add(model.Hp[j,t] >= (etamax[j])*model.W['aCIP',j,t] - model.H[j,t-tgap])
+        eq = eq - sum([model.W[i,j,t]*theta[j,i] for i in Ij[j]]) + model.Hp[j,t]
+        model.con.add(model.H[j,t] == eq)
+        eq = model.H[j,t]
+        
+#Only 1 CIP at a time
+for t in T:
+    eq = 0
+    for n in T:
+        if n >= (t-tau['aCIP']+1) and n <= t:
+            eq = eq + sum([model.W['aCIP',j,n] for j in J])
+    model.con.add(eq <= 1)
+
+###############################################################################
+
 ##SOLVE MODEL AND VISUALISE
 
 #Solve the model with PYOMO optimisation
-SolverFactory('cplex').solve(model).write()
+SolverFactory('cplex').solve(model,options_string='mipgap=0.0001').write()
 
 #Visualise solution in Gantt chart
-plt.figure(figsize=(12,3))
+plt.figure(figsize=(15,3))
 
 #Gap between bars
 bargap = 1/1000*H/60
@@ -238,18 +281,24 @@ marks = []
 lbls = []
 idp = 1
 Jsort = ['MillMash 1','MillMash 2','Lauter Tun 1','Lauter Tun 2','Wort Kettle','WhirlCool']
-#Plotting over units and tasks
+#Plotting over units and tasks - some formatting is performed for tasks relating to beer types
 for j in Jsort:
     idp = idp - 1
-    for i in Ij[j]:
+    for i in sorted(Ij[j]):
         idp = idp - 1
         #Marks and titles
         marks.append(idp)
-        lbls.append("{0:s}".format(j))
+        if j == 'Wort Kettle' and i == 'aCIP' or j == 'WhirlCool' and i == 'aCIP':
+            lbls.append("{0:s} (CIP)".format(j))
+        else:
+            lbls.append("{0:s}".format(j))
         for t in T:
             if model.W[i,j,t]() > 0:
                 #Gantt chart bar
-                plt.plot([t/60+bargap,t/60+tau[i]/60-bargap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
+                if i == 'aCIP':
+                    plt.plot([t/60+bargap,t/60+tau[i]/60-bargap], [idp,idp],alpha=.5,color='r', lw=15, solid_capstyle='butt')
+                else:
+                    plt.plot([t/60+bargap,t/60+tau[i]/60-bargap], [idp,idp],alpha=.5,color='c', lw=15, solid_capstyle='butt')
                 #Gantt chart text
                 txt = "{0:.0f}".format(model.B[i,j,t]())
                 plt.text(t/60+tau[i]/60/2, idp, txt, color='k', weight='bold', ha='center', va='center')
